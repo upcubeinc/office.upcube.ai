@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  office-nextcloud:
+    image: nextcloud:latest
+    container_name: office-nextcloud
+    ports:
+      - 8090:80
+    volumes:
+      - ./office-nextcloud:/var/www/html
+    environment:
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_HOST=office-db
+    depends_on:
+      - office-db
+    restart: unless-stopped
+
+  office-db:
+    image: mariadb:10.11
+    container_name: office-db
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+    volumes:
+      - ./office-db:/var/lib/mysql
+
+  office-collabora:
+    image: collabora/code
+    container_name: office-collabora
+    cap_add:
+      - MKNOD
+    ports:
+      - 9982:9980
+    environment:
+      - domain=office\\.upcube\\.ai
+      - username=${COLLABORA_USER}
+      - password=${COLLABORA_PASS}
+    restart: unless-stopped
+    volumes:
+      - ./office-collabora:/var/lib/lool
+
+volumes:
+  office-nextcloud:
+  office-db:
+  office-collabora:
